@@ -1,0 +1,77 @@
+const {Builder, By, Key, until} = require('selenium-webdriver')
+const utils = require('./utils')
+
+const SAUCE_USERNAME = process.env.SAUCE_USERNAME;
+const SAUCE_ACCESS_KEY = process.env.SAUCE_ACCESS_KEY;
+const ONDEMAND_URL = `https://${SAUCE_USERNAME}:${SAUCE_ACCESS_KEY}@ondemand.eu-central-1.saucelabs.com:443/wd/hub`;
+// NOTE: Use the URL below if using our EU datacenter (e.g. logged in to app.eu-central-1.saucelabs.com)
+// const ONDEMAND_URL = `https://${SAUCE_USERNAME}:${SAUCE_ACCESS_KEY}@ondemand.eu-central-1.saucelabs.com:443/wd/hub`;
+
+
+/**
+* Run this test before working on the problem.
+* When you view the results on your dashboard, you'll see that the test "Failed".
+* Your job is to figure out why the test failed and make the changes necessary to make the test pass.
+* Once you get the test working, update the code so that when the test runs, it can reach the Sauce Labs homepage,
+* hover over 'Resources' and then clicks the 'Documentation' link
+*/
+
+describe('Broken Sauce', function () {
+    it('should go to Google and click Sauce', async function () {
+
+        try {
+            let driver = await new Builder().withCapabilities(utils.brokenCapabilities)
+                    .usingServer(ONDEMAND_URL).build();
+
+       await driver.get("https://www.google.com");
+        // If you see a German or English GDPR modal on google.com you 
+        // will have to code around that or use the us-west-1 datacenter.
+        // You can investigate the modal elements using a Live Test(https://app.saucelabs.com/live/web-testing)
+
+
+        
+        let search = await driver.findElement(By.name("q"));
+        await search.sendKeys("Sauce Labs");
+        let button = await driver.findElement(By.name("btnK"))
+        await button.click()
+        let page = await driver.findElement(By.partialLinkText("sauce"));
+        
+        await driver.get("https://www.saucelabs.com");
+
+       // First, navigate to the Saucelabs homepage
+driver.get('https://saucelabs.com/');
+
+
+       
+        // Wait for the resources tab to be visible
+await driver.wait(until.elementLocated(By.xpath("/html/body/header/div/nav/ul/li[1]/ul[2]/li[4]/div[1]/div/a")), 60000);
+
+// Create an Actions object to simulate mouse hover
+let actions = driver.actions({ bridge: true });
+
+// Move the mouse to the resources tab
+await actions.move({ origin: driver.findElement(By.xpath("/html/body/header/div/nav/ul/li[1]/ul[2]/li[4]/div[1]/div/a")) }).perform();
+
+// Wait for the documentation link to be visible
+await driver.wait(until.elementLocated(By.xpath("/html/body/header/div/nav/ul/li[1]/ul[2]/li[4]/div[2]/div/div/div/ul/li[2]/div/ul/li/div/ul/li[1]/div/ul/li/ul/li[1]/a/span")), 60000);
+
+// Click on the documentation link
+await driver.findElement(By.xpath("/html/body/header/div/nav/ul/li[1]/ul[2]/li[4]/div[2]/div/div/div/ul/li[2]/div/ul/li/div/ul/li[1]/div/ul/li/ul/li[1]/a/span")).click();
+
+// Wait for the documentation page to load
+     
+
+        await driver.quit();
+        } catch (err) {
+            // hack to make this pass for Gitlab CI
+            // candidates can ignore this
+            if (process.env.GITLAB_CI === 'true') {
+                console.warn("Gitlab run detected.");
+                console.warn("Skipping error in brokenSauce.js");
+            } else {
+                throw err;
+            }
+        }
+
+    });
+});
